@@ -1,0 +1,42 @@
+version: '2'
+
+services:
+    db_api:
+        image: mysql
+        ports:
+            - 3322:3306
+        volumes:
+            - "./.data/db:/var/lib/mysql"
+        environment:
+            MYSQL_ROOT_PASSWORD: root
+    redis_api:
+        image: redis:alpine
+        ports:
+            - 6379:6379
+    mongodb_api:
+        image: mongo
+        volumes:
+            - "./.data/mongodb:/data/db"
+        ports:
+            - 27017:27017
+    php_api:
+        build: php7-fpm
+        ports:
+            - 9000:9000
+        links:
+            - db_api:mysqldb
+            - redis_api
+            - mongodb_api
+        volumes:
+            - ../iManager:/var/www/api
+
+    nginx_api:
+        build: nginx
+        ports:
+            - 8081:80
+        links:
+            - php_api
+        volumes_from:
+            - php_api
+        volumes:
+            - ./logs/nginx/:/var/log/nginx
